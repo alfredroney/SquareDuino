@@ -8,7 +8,7 @@
 
 SquareDuino
 ===========
-(c) 2014, Alfred "Ben" Roney, Ph.D.
+&copy; 2014, Alfred "Ben" Roney, Ph.D.
 http://alfred-b-roney-phd-cv.appspot.com/
 
 A real-time MIDI-controlled AF oscillator and CV generator sketch for
