@@ -10,8 +10,6 @@ SquareDuino
 ===========
 &copy; 2014, Alfred "Ben" Roney, Ph.D.
 
-http://alfred-b-roney-phd-cv.appspot.com/
-
 A real-time MIDI-controlled AF oscillator and CV generator sketch for
 16 MHz ATMEGA 328P-based Arduino development boards in conjunction with
 the SparkFun MIDI Shield. Tested on the UNO R3 and Duemilanove.
@@ -24,3 +22,5 @@ agreement.
 
 Always remember to protect your hearing and respect your neighbors.
 And groove . . . don't forget to groove!
+
+http://alfred-b-roney-phd-cv.appspot.com/
