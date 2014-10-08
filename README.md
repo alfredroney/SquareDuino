@@ -15,8 +15,8 @@ A real-time MIDI-controlled AF oscillator and CV generator sketch for
 the SparkFun MIDI Shield. Tested on the UNO R3 and Duemilanove.
  
 Released under the Creative Commons Attribution-ShareAlike 4.0 International
-license. For a summary, see http://creativecommons.org/licenses/by-sa/4.0/
-For details, see http://creativecommons.org/licenses/by-sa/4.0/legalcode
+license. For a summary, see http://creativecommons.org/licenses/by-sa/4.0/.
+For details, see http://creativecommons.org/licenses/by-sa/4.0/legalcode.
 Your downloading and use of this software constitutes acceptance of this
 agreement.
 
