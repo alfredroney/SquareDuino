@@ -1,24 +1,14 @@
-// SquareDuino
-// (c) 2014, Alfred "Ben" Roney, Ph.D.
-// http://alfred-b-roney-phd-cv.appspot.com/
+// SquareDuino v0.0.0
+//   _   _   _   _   _   _   _   _   _   _   _   _   _   _   _   _   _   _   _
+// _| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_
 //
-//   ,---.                                       ,------.          ,--.                
-//  '   .-'  ,---. ,--.,--. ,--,--.,--.--. ,---. |  .-.  \ ,--.,--.`--',--,--,  ,---.  
-//  `.  `-. | .-. ||  ||  |' ,-.  ||  .--'| .-. :|  |  \  :|  ||  |,--.|      \| .-. | 
-//  .-'    |' '-' |'  ''  '\ '-'  ||  |   \   --.|  '--'  /'  ''  '|  ||  ||  |' '-' ' 
-//  `-----'  `-|  | `----'  `--`--'`--'    `----'`-------'  `----' `--'`--''--' `---'  
-//             `--'                                                                    
+// (c) 2014, Alfred "Ben" Roney, Ph.D., All rights reserved.
+// http://alfred-b-roney-phd-cv.appspot.com/
 //
 // A real-time MIDI-controlled AF oscillator and CV generator sketch for
 // 16 MHz ATMEGA 328P-based Arduino development boards in conjunction with
 // the SparkFun MIDI Shield. Tested on the UNO R3 and Duemilanove.
 // 
-// Released under the Creative Commons Attribution-ShareAlike 4.0 International
-// license. For a summary, see http://creativecommons.org/licenses/by-sa/4.0/
-// For details, see http://creativecommons.org/licenses/by-sa/4.0/legalcode
-// Your downloading and use of this software constitutes acceptance of this
-// agreement.
-//
 // Always remember to protect your hearing and respect your neighbors.
 // And groove . . . don't forget to groove!
 //
@@ -43,13 +33,14 @@
 SoftwareSerial debugSerial(MIDIShield::Serial::kDebugRX,MIDIShield::Serial::kDebugTX);
 #endif
 
-// The following array contains the length (in timer steps) of the period of
-// a note in the MIDI scale. They were computed with Mathematica.
-// The enumeration defines some useful constants.
+// Defines some useful constants.
 enum {
   kA440 = 70, // index into noteCounts[]
   kMaxNotesOn = 32 // ghosts appear . . .
 };
+
+// The following array contains the length (in timer steps) of the period of
+// a note in the MIDI scale. They were computed with Mathematica.
 const unsigned int noteCounts[] = {
   15288, 14430, 13620, 12855, 12134, 11453, 10810, 10203, 9630, 9090, 8580, 8098,
   7644, 7214, 6809, 6427, 6066, 5726, 5404, 5101, 4815, 4544, 4289, 4049, 3821,
