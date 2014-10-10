@@ -3,7 +3,6 @@
 // _| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_
 //
 // (c) 2014, Alfred "Ben" Roney, Ph.D., All rights reserved.
-// http://alfred-b-roney-phd-cv.appspot.com/
 //
 // A real-time MIDI-controlled AF oscillator and CV generator sketch for
 // 16 MHz ATMEGA 328P-based Arduino development boards in conjunction with
@@ -294,7 +293,7 @@ void setup() {
   sei(); // re-enable global interrupts
 }
 
-// Interrupt service routine for when Timer1
+// Interrupt service routine for Timer1
 // When the count resets, toggle the output state
 // if a note is on, otherwise stay low.
 ISR(TIMER1_COMPA_vect) {

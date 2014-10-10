@@ -41,4 +41,3 @@ Planned
  * CC and Velocity parsing
  * Channel selection filter
 
-http://alfred-b-roney-phd-cv.appspot.com/

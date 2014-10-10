@@ -1,6 +1,5 @@
 // MIDIShield.h v0.0.0
 // (c) 2014, Alfred "Ben" Roney, Ph.D., All rights reserved
-// http://alfred-b-roney-phd-cv.appspot.com
 //
 // Convenience header for SparkFun MIDI Shield on Arduino Uno R3 and Duemilanove.
 // 
