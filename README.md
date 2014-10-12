@@ -31,8 +31,7 @@ Current Status
 
 To Do
 =====
- * Verify and fine-tune noteCounts table
- * Clean up the noteCounts generator notebook (maybe a Mathematica plug-in?)
+ * Maybe a Mathematica tuning calculator CDF?
  * Make some YouTube demos that aren't lame
 
 Planned
@@ -40,4 +39,3 @@ Planned
  * Convert to an open-source license
  * CC and Velocity parsing
  * Channel selection filter
-
