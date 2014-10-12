@@ -14,27 +14,30 @@
 #include "MIDIShield.h" // some useful mappings
 
 // We will manipulate the timers directly in this sketch,
-// so we go right to the source.
-// For a primer on the timers, see the following tutorial:
+// so we use the AVR headers.
+// For a timer primer, turn to these tutorials:
 // http://www.engblaze.com/we-interrupt-this-program-to-bring-you-a-tutorial-on-arduino-interrupts/
+// http://www.engblaze.com/microcontroller-tutorial-avr-and-arduino-timer-interrupts/
 //
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
 // Since we're using the main serial IO for MIDI, we write
 // debugging messages to a software serial port on some
-// spare pins. Use a FTDI breakout to monitor it, but
-// turn it off when not being used since it's a cycle hog.
-#define USINGDEBUGSERIAL 0
+// spare pins. Use a FTDI breakout to monitor it.
+// Keep it off unless you need it, since it uses timers
+// under the hood. This macro disables the AV and CV outputs.
+#define DEBUGMIDIPARSER 0
 
-#if USINGDEBUGSERIAL
+#if DEBUGMIDIPARSER
 #include "SoftwareSerial.h"
-SoftwareSerial debugSerial(MIDIShield::Serial::kDebugRX,MIDIShield::Serial::kDebugTX);
+SoftwareSerial debugSerial(MIDIShield::Serial::kDebugRX,
+                           MIDIShield::Serial::kDebugTX);
 #endif
 
 // Defines some useful constants.
 enum {
-  kA440 = 70, // index into noteCounts[]
+  kA440 = 69, // index into noteCounts[]
   kMaxNotesOn = 32 // ghosts appear . . .
 };
 
@@ -88,7 +91,7 @@ byte resetParser() {
 
 // We echo MIDI input to allow daisy-chaining of instruments.
 void Midi_Send(byte cmd, byte data1, byte data2) {
-#if USINGDEBUGSERIAL
+#if DEBUGMIDIPARSER
   debugSerial.write("0x");
   debugSerial.print(int(cmd),HEX);
   
@@ -107,7 +110,7 @@ void Midi_Send(byte cmd, byte data1, byte data2) {
 // This is a callback for when serial data arrives.
 void serialEvent() {
   if(midiMsgRcvd) {
-#if USINGDEBUGSERIAL
+#if DEBUGMIDIPARSER
     debugSerial.write("waiting...\r\n"); 
 #endif
     return; // don't read the next byte until we've processed the last message
@@ -125,12 +128,18 @@ void serialEvent() {
   }
 }
 
-// When the note value changes,
+// When the note value changes, update the value.
 void setNoteCount(byte thisNote) {
+#if DEBUGMIDIPARSER
+  debugSerial.write("setNoteCount(");
+  debugSerial.write((int)thisNote);
+  debugSerial.write(")\r\n");
+#else
   cli(); // temporarily stop the timer interrupts
   OCR1A = noteCounts[thisNote]; // stuff the appropriate register
   TCNT1 = 0; // reset the counter
   sei(); // resume timer interrupts
+#endif
 }
 
 // push a note onto the end of the list
@@ -168,7 +177,7 @@ void removeNoteAtIndex(byte i) {
     noteList[i] = noteList[i+1];
   }
   noteCount--;
-#if USINGDEBUGSERIAL
+#if DEBUGMIDIPARSER
   debugSerial.write("NOTES:");
   for(i=0; i<noteCount; ++i) {
     debugSerial.write(" 0x");
@@ -246,9 +255,17 @@ void loop () {
       int cv0 = map(pot0, 0, 1023, 254, 1);
       int cv1 = map(pot1, 0, 1023, 254, 1);
       
+#if DEBUGMIDIPARSER
+      debugSerial.write("cv0 = ");
+      debugSerial.write((int)cv0);
+      debugSerial.write(", cv1 = ");
+      debugSerial.write((int)cv1);
+      debugSerial.write("\r\n");
+#else
       OCR2A = cv0;
       OCR2B = cv1;
-      
+#endif
+
       lastPot0 = pot0;
       lastPot1 = pot1;
     } 
@@ -261,11 +278,16 @@ void loop () {
 //
 void setup() {
   Serial.begin(MIDIShield::Serial::kMIDIBAUD);
-#if USINGDEBUGSERIAL
+#if DEBUGMIDIPARSER
   debugSerial.begin(57600);  
   debugSerial.write("INIT\r\n");
+  debugSerial.write("WARNING: OUTPUTS ARE DISABLED\r\n");
 #endif
 
+  // SoftwareSerial uses the timers, so we cannot use them while
+  // debugging the MIDI parser.
+  //
+#if !DEBUGMIDIPARSER
   pinMode(MIDIShield::Output::kSig,OUTPUT);  
   pinMode(MIDIShield::Output::kCV0,OUTPUT);
   pinMode(MIDIShield::Output::kCV1,OUTPUT);
@@ -291,6 +313,7 @@ void setup() {
   OCR1A = noteCounts[kA440];
 
   sei(); // re-enable global interrupts
+#endif
 }
 
 // Interrupt service routine for Timer1
