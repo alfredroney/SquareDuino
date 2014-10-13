@@ -55,9 +55,11 @@ const unsigned int noteCounts[] = {
   12, 11, 10, 10, 9
 };
 
-// We need to handle multiple notes on at once to gracefully handle
-// clumsily-fingered trills and runs. I am not a keyboard player, so
-// this was necessary to make it playable.
+// We need to handle multiple notes on at once for fat-fingerd
+// trills and runs. I am not a keyboard player, so
+// this was necessary to make it playable for me. It also
+// handles the note on/off issues that can arise from
+// drawing patterns in a DAW.
 volatile byte noteCount = 0; // Number of "note on" messages we have received
 volatile byte noteList[kMaxNotesOn]; // list of "note on" messages in arrival order
 
@@ -92,7 +94,7 @@ byte resetParser() {
 // We echo MIDI input to allow daisy-chaining of instruments.
 void Midi_Send(byte cmd, byte data1, byte data2) {
 #if DEBUGMIDIPARSER
-  debugSerial.write("0x");
+  debugSerial.write("MIDI ECHO: 0x");
   debugSerial.print(int(cmd),HEX);
   
   debugSerial.write(" 0x");
@@ -132,7 +134,7 @@ void serialEvent() {
 void setNoteCount(byte thisNote) {
 #if DEBUGMIDIPARSER
   debugSerial.write("setNoteCount(");
-  debugSerial.write((int)thisNote);
+  debugSerial.print(int(thisNote),DEC);
   debugSerial.write(")\r\n");
 #else
   cli(); // temporarily stop the timer interrupts
@@ -257,9 +259,9 @@ void loop () {
       
 #if DEBUGMIDIPARSER
       debugSerial.write("cv0 = ");
-      debugSerial.write((int)cv0);
+      debugSerial.print(int(cv0),DEC);
       debugSerial.write(", cv1 = ");
-      debugSerial.write((int)cv1);
+      debugSerial.print(int(cv1),DEC);
       debugSerial.write("\r\n");
 #else
       OCR2A = cv0;
@@ -279,7 +281,7 @@ void loop () {
 void setup() {
   Serial.begin(MIDIShield::Serial::kMIDIBAUD);
 #if DEBUGMIDIPARSER
-  debugSerial.begin(57600);  
+  debugSerial.begin(MIDIShield::Serial::kDebugBAUD);  
   debugSerial.write("INIT\r\n");
   debugSerial.write("WARNING: OUTPUTS ARE DISABLED\r\n");
 #endif
