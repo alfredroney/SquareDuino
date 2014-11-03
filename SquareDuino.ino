@@ -38,22 +38,38 @@ SoftwareSerial debugSerial(MIDIShield::Serial::kDebugRX,
 // Defines some useful constants.
 enum {
   kA440 = 69, // index into noteCounts[]
-  kMaxNotesOn = 32 // ghosts appear . . .
+  kMaxNotesOn = 32, // ghosts appear . . .
+  kNumOscs = 3,
+  kRootPrd  = 3, // divide by three to get the root
+  kFifthPrd = 2, // divide by two to get the perfect fifth
+  kSubPrd   = 6  // divide by six to get the sub-octave
 };
 
 // The following array contains the length (in timer steps) of the period of
 // a note in the MIDI scale. They were computed with Mathematica.
 const unsigned int noteCounts[] = {
-  15288, 14430, 13620, 12855, 12134, 11453, 10810, 10203, 9630, 9090, 8580, 8098,
-  7644, 7214, 6809, 6427, 6066, 5726, 5404, 5101, 4815, 4544, 4289, 4049, 3821,
-  3607, 3404, 3213, 3033, 2862, 2702, 2550, 2407, 2272, 2144, 2024, 1910, 1803,
-  1702, 1606, 1516, 1431, 1350, 1275, 1203, 1135, 1072, 1011, 955, 901, 850, 803,
-  757, 715, 675, 637, 601, 567, 535, 505, 477, 450, 425, 401, 378, 357, 337, 318,
-  300, 283, 267, 252, 238, 224, 212, 200, 189, 178, 168, 158, 149, 141, 133, 126, 
-  118, 112, 105, 99, 94, 88, 83, 79, 74, 70, 66, 62, 59, 55, 52, 49, 46, 44, 41,
-  39, 37, 35, 33, 31, 29, 27, 26, 24, 23, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12,
-  12, 11, 10, 10, 9
+  10192, 9620, 9080, 8570, 8089, 7635, 7206, 6802, 6420, 6060, 5719, 5398, 5095, 4809, 4539, 4284, 4044, 
+ 3817, 3603, 3400, 3209, 3029, 2859, 2699, 2547, 2404, 2269, 2142, 2021, 1908, 1801, 1700, 1604, 1514, 
+ 1429, 1349, 1273, 1202, 1134, 1070, 1010, 953, 900, 849, 802, 757, 714, 674, 636, 600, 567, 535, 505, 
+ 476, 449, 424, 400, 378, 357, 336, 318, 300, 283, 267, 252, 238, 224, 212, 200, 188, 178, 168, 158, 
+ 149, 141, 133, 125, 118, 112, 105, 99, 94, 88, 83, 79, 74, 70, 66, 62, 59, 55, 52, 49, 46, 44, 41, 39, 
+ 37, 34, 32, 31, 29, 27, 26, 24, 23, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 12, 11, 10, 10, 9, 8, 8, 7, 
+ 7, 6, 6, 6
 };
+
+const byte oscPin[kNumOscs] = {
+  MIDIShield::Output::kSub,
+  MIDIShield::Output::kRoot,
+  MIDIShield::Output::kFifth
+};
+const byte oscPrd[kNumOscs] = { kSubPrd, kRootPrd, kFifthPrd };
+      byte oscCnt[kNumOscs];
+
+void resetOscs() {
+  for (byte i=0; i<kNumOscs; ++i) {
+    oscCnt[i] = 0;
+  }
+}
 
 // We need to handle multiple notes on at once for fat-fingerd
 // trills and runs. I am not a keyboard player, so
@@ -290,9 +306,12 @@ void setup() {
   // debugging the MIDI parser.
   //
 #if !DEBUGMIDIPARSER
-  pinMode(MIDIShield::Output::kSig,OUTPUT);  
-  pinMode(MIDIShield::Output::kCV0,OUTPUT);
-  pinMode(MIDIShield::Output::kCV1,OUTPUT);
+  pinMode(MIDIShield::Output::kSub  , OUTPUT);  
+  pinMode(MIDIShield::Output::kRoot , OUTPUT);  
+  pinMode(MIDIShield::Output::kFifth, OUTPUT);  
+  pinMode(MIDIShield::Output::kSig  , OUTPUT);  
+  pinMode(MIDIShield::Output::kCV0  , OUTPUT);
+  pinMode(MIDIShield::Output::kCV1  , OUTPUT);
 
   cli();  // disable global interrupts
   
@@ -322,6 +341,15 @@ void setup() {
 // When the count resets, toggle the output state
 // if a note is on, otherwise stay low.
 ISR(TIMER1_COMPA_vect) {
+  for (byte i=0; i<kNumOscs; ++i) {
+    if (not oscCnt[i]) {
+      digitalWrite(oscPin[i], (noteCount > 0) and not digitalRead(oscPin[i]));
+    }      
+    oscCnt[i] += 1;
+    if (oscCnt[i] == oscPrd[i]) {
+      oscCnt[i] = 0;
+    }
+  }
   digitalWrite(MIDIShield::Output::kSig,
                (noteCount > 0) and !digitalRead(MIDIShield::Output::kSig));
 }

@@ -22,7 +22,12 @@ namespace MIDIShield {
     }
     namespace Output {
       enum {
+        kSub   =  9,
+        kRoot  = 10,
+        kFifth =  5,
+
         kSig =  8,
+
         kCV0 =  3,
         kCV1 = 11
       };
