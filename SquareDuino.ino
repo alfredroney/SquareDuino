@@ -49,7 +49,8 @@ enum {
 };
 
 // The following array contains the length (in timer steps) of the period of
-// a note in the MIDI scale. They were computed with Mathematica.
+// a note in the MIDI scale. They were computed with Mathematica for a
+// pre-scaler value not supported by the target processor.
 const unsigned int noteCounts[] = {
   10192, 9620, 9080, 8570, 8089, 7635, 7206, 6802, 6420, 6060, 5719, 5398, 5095, 4809, 4539, 4284, 4044, 
  3817, 3603, 3400, 3209, 3029, 2859, 2699, 2547, 2404, 2269, 2142, 2021, 1908, 1801, 1700, 1604, 1514, 
@@ -345,14 +346,14 @@ void setup() {
 ISR(TIMER1_COMPA_vect) {
   for (byte i=0; i<kNumOscs; ++i) {
     if (not oscCnt[i]) {
-      digitalWrite(oscPin[i], (noteCount > 0) and not digitalRead(oscPin[i]));
+      digitalWrite(oscPin[i], (noteCount > 0) and (not digitalRead(oscPin[i])));
     }      
     oscCnt[i] += 1;
-    if (oscCnt[i] == oscPrd[i]) {
+    if (oscCnt[i] == oscPrd[i] or (not noteCount)) {
       oscCnt[i] = 0;
     }
   }
   digitalWrite(MIDIShield::Output::kSig,
-               (noteCount > 0) and !digitalRead(MIDIShield::Output::kSig));
+               (noteCount > 0) and (not digitalRead(MIDIShield::Output::kSig)));
 }
 
