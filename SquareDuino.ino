@@ -328,7 +328,7 @@ void setup() {
   
   TIMSK1 = (1 << OCIE1A); // enable Timer1 compare interrupt
 
-  TCCR1B = (1 << CS11) | (1 << CS10) // prescale by 64
+  TCCR1B = (1 << CS11) | (0 << CS10) // prescale by 8
          | (1 << WGM12); // turn on CTC mode
 
   OCR1A = noteCounts[kA440];
