@@ -39,7 +39,10 @@ SoftwareSerial debugSerial(MIDIShield::Serial::kDebugRX,
 enum {
   kA440 = 69, // index into noteCounts[]
   kMaxNotesOn = 32, // ghosts appear . . .
-  kNumOscs = 3,
+
+  kNoteOffset = 3*12, // align useful range to MPK49 keyboard (1 octave down)
+
+  kNumOscs  = 3, // the main oscillator uses a different mechanism
   kRootPrd  = 3, // divide by three to get the root
   kFifthPrd = 2, // divide by two to get the perfect fifth
   kSubPrd   = 6  // divide by six to get the sub-octave
@@ -57,6 +60,9 @@ const unsigned int noteCounts[] = {
  7, 6, 6, 6
 };
 
+// We produce the desired sub-root-fifth pitches by dividing the
+// primary oscillator. We also write the primary oscillator output,
+// but we need no special handling for it.
 const byte oscPin[kNumOscs] = {
   MIDIShield::Output::kSub,
   MIDIShield::Output::kRoot,
@@ -64,12 +70,6 @@ const byte oscPin[kNumOscs] = {
 };
 const byte oscPrd[kNumOscs] = { kSubPrd, kRootPrd, kFifthPrd };
       byte oscCnt[kNumOscs];
-
-void resetOscs() {
-  for (byte i=0; i<kNumOscs; ++i) {
-    oscCnt[i] = 0;
-  }
-}
 
 // We need to handle multiple notes on at once for fat-fingerd
 // trills and runs. I am not a keyboard player, so
@@ -153,6 +153,8 @@ void setNoteCount(byte thisNote) {
   debugSerial.print(int(thisNote),DEC);
   debugSerial.write(")\r\n");
 #else
+  // apply the offset
+  thisNote = (thisNote < kNoteOffset) ? 0 : (thisNote - kNoteOffset);
   cli(); // temporarily stop the timer interrupts
   OCR1A = noteCounts[thisNote]; // stuff the appropriate register
   TCNT1 = 0; // reset the counter
