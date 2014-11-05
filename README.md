@@ -23,8 +23,8 @@ Current Status
 ==============
  * Pre-release (to be released in conjunction with supporting Instructable)
  * Note parsing works
- * AF output
- * CV output
+ * AF output: sub-root-fifth-fifth 8va
+ * CV output: two 8-bit ultrasonic 5v PWM channels
  * No channel recognition
  * No velocity
  * No CCs
