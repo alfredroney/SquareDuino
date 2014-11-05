@@ -26,7 +26,7 @@
 // debugging messages to a software serial port on some
 // spare pins. Use a FTDI breakout to monitor it.
 // Keep it off unless you need it, since it uses timers
-// under the hood. This macro disables the AV and CV outputs.
+// under the hood. This macro disables the AF and CV outputs.
 #define DEBUGMIDIPARSER 0
 
 #if DEBUGMIDIPARSER
@@ -40,12 +40,15 @@ enum {
   kA440 = 69, // index into noteCounts[]
   kMaxNotesOn = 32, // ghosts appear . . .
 
-  kNoteOffset = 3*12, // align useful range to MPK49 keyboard (1 octave down)
+  kOctave = 12,
+  kNoteOffset = 3*kOctave, // align useful range to MPK49 keyboard (16' - 1 octave down)
 
-  kNumOscs  = 3, // the main oscillator uses a different mechanism
-  kRootPrd  = 3, // divide by three to get the root
-  kFifthPrd = 2, // divide by two to get the perfect fifth
-  kSubPrd   = 6  // divide by six to get the sub-octave
+  kNumOscs = 4,
+
+  kRootPrd     = 3, // divide by three to get the root
+  kFifthPrd    = 2, // divide by two to get the perfect fifth
+  kSubPrd      = 6, // divide by six to get the sub-octave
+  kSubFifthPrd = 4  // divide by four to get the sub's perfect fifth
 };
 
 // The following array contains the length (in timer steps) of the period of
@@ -66,13 +69,14 @@ const unsigned int noteCounts[] = {
 // but we need no special handling for it.
 const byte oscPin[kNumOscs] = {
   MIDIShield::Output::kSub,
+  MIDIShield::Output::kSubFifth,
   MIDIShield::Output::kRoot,
   MIDIShield::Output::kFifth
 };
-const byte oscPrd[kNumOscs] = { kSubPrd, kRootPrd, kFifthPrd };
+const byte oscPrd[kNumOscs] = { kSubPrd, kSubFifthPrd, kRootPrd, kFifthPrd };
       byte oscCnt[kNumOscs];
 
-// We need to handle multiple notes on at once for fat-fingerd
+// We need to handle multiple notes on at once for fat-fingered
 // trills and runs. I am not a keyboard player, so
 // this was necessary to make it playable for me. It also
 // handles the note on/off issues that can arise from
@@ -154,10 +158,12 @@ void setNoteCount(byte thisNote) {
   debugSerial.print(int(thisNote),DEC);
   debugSerial.write(")\r\n");
 #else
-  // apply the offset
-  thisNote = (thisNote < kNoteOffset) ? 0 : (thisNote - kNoteOffset);
+  // Apply the offset, cycling through the lowest octave if MIDI note messages
+  // below the offset are received. More musical than clamping, less mysterious
+  // than throwing the notes away, and still obvious to the listener.
+  thisNote = (thisNote < kNoteOffset) ? (thisNote % kOctave) : (thisNote - kNoteOffset);
   cli(); // temporarily stop the timer interrupts
-  OCR1A = noteCounts[thisNote]; // stuff the appropriate register
+  OCR1A = noteCounts[thisNote]; // stuff the comparison register
   TCNT1 = 0; // reset the counter
   sei(); // resume timer interrupts
 #endif
@@ -303,18 +309,16 @@ void setup() {
   debugSerial.begin(MIDIShield::Serial::kDebugBAUD);  
   debugSerial.write("INIT\r\n");
   debugSerial.write("WARNING: OUTPUTS ARE DISABLED\r\n");
-#endif
-
+#else
   // SoftwareSerial uses the timers, so we cannot use them while
   // debugging the MIDI parser.
   //
-#if !DEBUGMIDIPARSER
-  pinMode(MIDIShield::Output::kSub  , OUTPUT);  
-  pinMode(MIDIShield::Output::kRoot , OUTPUT);  
-  pinMode(MIDIShield::Output::kFifth, OUTPUT);  
-  pinMode(MIDIShield::Output::kSig  , OUTPUT);  
-  pinMode(MIDIShield::Output::kCV0  , OUTPUT);
-  pinMode(MIDIShield::Output::kCV1  , OUTPUT);
+  pinMode(MIDIShield::Output::kSub     , OUTPUT);  
+  pinMode(MIDIShield::Output::kSubFifth, OUTPUT);  
+  pinMode(MIDIShield::Output::kRoot    , OUTPUT);  
+  pinMode(MIDIShield::Output::kFifth   , OUTPUT);  
+  pinMode(MIDIShield::Output::kCV0     , OUTPUT);
+  pinMode(MIDIShield::Output::kCV1     , OUTPUT);
 
   cli();  // disable global interrupts
   
@@ -327,21 +331,22 @@ void setup() {
   
   
   // initialize Timer1 in CTC-mode (variable frequency)
-  TCCR1A = 0; // 
+  TCCR1A = 0;
   
   TIMSK1 = (1 << OCIE1A); // enable Timer1 compare interrupt
 
   TCCR1B = (1 << CS11) | (0 << CS10) // prescale by 8
          | (1 << WGM12); // turn on CTC mode
 
-  OCR1A = noteCounts[kA440];
+  OCR1A = noteCounts[0]; // stuff the comparison register
+  TCNT1 = 0; // clear the counter
 
   sei(); // re-enable global interrupts
 #endif
 }
 
 // Interrupt service routine for Timer1
-// When the count resets, toggle the output state
+// When each count resets, toggle the output state
 // if a note is on, otherwise stay low.
 ISR(TIMER1_COMPA_vect) {
   for (byte i=0; i<kNumOscs; ++i) {
@@ -353,7 +358,5 @@ ISR(TIMER1_COMPA_vect) {
       oscCnt[i] = 0;
     }
   }
-  digitalWrite(MIDIShield::Output::kSig,
-               (noteCount > 0) and (not digitalRead(MIDIShield::Output::kSig)));
 }
 
