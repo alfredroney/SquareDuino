@@ -12,7 +12,7 @@
 // And groove . . . don't forget to groove!
 //
 #include "MIDIShield.h"  // some useful hardware mappings
-#include "MIDI.h"        // https://github.com/FortySevenEffects/arduino_midi_library
+#include <MIDI.h>        // https://github.com/FortySevenEffects/arduino_midi_library
 #include "Oscillator.h"  // Code for the oscillator voices
 #include "NoteManager.h" // track note on/off messages
 #include "CVGenerator.h" // generate dual control voltages
